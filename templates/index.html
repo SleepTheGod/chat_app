@@ -34,4 +34,55 @@
             });
         }
 
-        // Handle
+        // Handle incoming messages
+        socket.on('message', function(data) {
+            const messagesDiv = document.getElementById('messages');
+            if (data.error) {
+                messagesDiv.innerHTML += `<div style="color:red;">${data.error}</div>`;
+            } else {
+                messagesDiv.innerHTML += `<div>${data.message}</div>`;
+            }
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the bottom
+        });
+
+        // Send a message
+        document.getElementById('send-button').onclick = function() {
+            const messageInput = document.getElementById('message-input');
+            const secretKey = prompt("Enter your secret key:"); // Prompt for a secret key
+            const message = messageInput.value;
+
+            if (secretKey && message) {
+                const encryptedMessage = encryptMessage(message, secretKey);
+                socket.emit('message', { message: encryptedMessage });
+                messageInput.value = '';  // Clear input
+            } else {
+                alert('Please enter both the secret key and a message.');
+            }
+        };
+
+        // Handle file upload
+        document.getElementById('upload-button').onclick = function() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                })
+                .catch(error => {
+                    console.error('Error uploading file:', error);
+                });
+            } else {
+                alert('Please select a file to upload.');
+            }
+        };
+    </script>
+</body>
+</html>
