@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Encrypted Chat App</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
     <style>
         /* Simple styling */
         body { font-family: Arial, sans-serif; }
@@ -22,44 +23,15 @@
     <script>
         const socket = io('http://127.0.0.1:5000');  // Change to your server's address if needed
 
-        // Handle incoming messages
-        socket.on('message', function(data) {
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML += `<div>${data}</div>`;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the bottom
-        });
+        // Encrypt message function
+        function encryptMessage(message, secret) {
+            const iv = CryptoJS.lib.WordArray.random(16);
+            const key = CryptoJS.enc.Utf8.parse(secret);
+            const encrypted = CryptoJS.AES.encrypt(message, key, { iv: iv });
+            return JSON.stringify({
+                iv: CryptoJS.enc.Base64.stringify(iv),
+                ciphertext: encrypted.toString()
+            });
+        }
 
-        // Send a message
-        document.getElementById('send-button').onclick = function() {
-            const messageInput = document.getElementById('message-input');
-            const message = messageInput.value;
-            socket.emit('message', message);
-            messageInput.value = '';  // Clear input
-        };
-
-        // Handle file upload
-        document.getElementById('upload-button').onclick = function() {
-            const fileInput = document.getElementById('file-input');
-            const file = fileInput.files[0];
-            if (file) {
-                const formData = new FormData();
-                formData.append('file', file);
-                
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message || data.error);
-                })
-                .catch(error => {
-                    console.error('Error uploading file:', error);
-                });
-            } else {
-                alert('Please select a file to upload.');
-            }
-        };
-    </script>
-</body>
-</html>
+        // Handle
