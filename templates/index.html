@@ -3,23 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encrypted Chat Application</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Encrypted Chat App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <style>
+        /* Simple styling */
+        body { font-family: Arial, sans-serif; }
+        #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+        #message-input { width: 80%; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to the Encrypted Chat, {{ current_user.username }}!</h1>
-        <button onclick="logout()">Logout</button>
-        <div class="chat-box">
-            <div id="messages"></div>
-        </div>
-        <input id="message-input" type="text" placeholder="Type your message..." />
-        <button id="send-button">Send</button>
-        <input type="file" id="file-input" />
-        <button id="upload-button">Upload</button>
-    </div>
+    <div id="messages"></div>
+    <input id="message-input" placeholder="Type a message..." />
+    <button id="send-button">Send</button>
+    <input type="file" id="file-input" />
+    <button id="upload-button">Upload File</button>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        const socket = io('http://127.0.0.1:5000');  // Change to your server's address if needed
+
+        // Handle incoming messages
+        socket.on('message', function(data) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<div>${data}</div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the bottom
+        });
+
+        // Send a message
+        document.getElementById('send-button').onclick = function() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value;
+            socket.emit('message', message);
+            messageInput.value = '';  // Clear input
+        };
+
+        // Handle file upload
+        document.getElementById('upload-button').onclick = function() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                })
+                .catch(error => {
+                    console.error('Error uploading file:', error);
+                });
+            } else {
+                alert('Please select a file to upload.');
+            }
+        };
+    </script>
 </body>
 </html>
