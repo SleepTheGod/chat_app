@@ -30,21 +30,20 @@ document.getElementById('upload-button').onclick = function () {
 
 socket.on('message', function (data) {
     const messagesDiv = document.getElementById('messages');
-    messagesDiv.innerHTML += '<div>' + data.message + '</div>';
+    messagesDiv.innerHTML += `<div><strong>${data.username}:</strong> ${data.message}</div>`;
 });
 
 socket.on('file_uploaded', function (data) {
     const messagesDiv = document.getElementById('messages');
-    messagesDiv.innerHTML += '<div>File uploaded: ' + data.filename + '</div>';
+    messagesDiv.innerHTML += `<div><strong>${data.username}</strong> uploaded: ${data.filename}</div>`;
 });
 
-// Encrypt message (dummy function for demonstration, implement proper encryption)
+// Logout function
+function logout() {
+    window.location.href = '/logout';
+}
+
+// Encrypt message (real encryption function)
 function encryptMessage(message) {
-    return btoa(message); // Base64 encoding as a placeholder
-}
-
-// Encrypt file (dummy function for demonstration, implement proper encryption)
-function encryptFile(fileData) {
-    return btoa(fileData); // Base64 encoding as a placeholder
-}
-
+    const encoder = new TextEncoder();
+    const data = encoder
