@@ -8,6 +8,8 @@
 </head>
 <body>
     <div class="container">
+        <h1>Welcome to the Encrypted Chat, {{ current_user.username }}!</h1>
+        <button onclick="logout()">Logout</button>
         <div class="chat-box">
             <div id="messages"></div>
         </div>
