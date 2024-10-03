@@ -1,12 +1,21 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
 }
 
 .container {
     width: 80%;
     margin: 0 auto;
     padding: 20px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
 }
 
 .chat-box {
@@ -20,8 +29,13 @@ body {
 #message-input {
     width: 70%;
     padding: 10px;
+    margin-right: 10px;
 }
 
 button {
     padding: 10px;
+}
+
+#file-input {
+    margin-top: 10px;
 }
