@@ -1,7 +1,7 @@
 import os
 import json
 import base64
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -15,6 +15,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp3', 'wav'}
 SECRET_KEY = os.urandom(16)  # Generate a random key for AES encryption
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = os.urandom(24)  # Set a secret key for session management
 CORS(app, resources={r"/socket.io/*": {"origins": "*"}})  # Allow all origins
 socketio = SocketIO(app)
 
@@ -41,6 +42,21 @@ def decrypt_message(enc_message, key):
     return unpad(cipher.decrypt(ct), AES.block_size).decode('utf-8')
 
 # Routes
+@app.route('/')
+def index():
+    # Redirect to login if not logged in
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('chat.html')  # Render the chat page
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        session['username'] = username  # Store username in session
+        return redirect(url_for('index'))  # Redirect to the chat page
+    return render_template('login.html')  # Render login page
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
