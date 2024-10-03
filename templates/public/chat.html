@@ -4,71 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-    <style>
-        /* Simple styling */
-        body { font-family: Arial, sans-serif; }
-        #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
-        #message-input { width: 80%; }
-    </style>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body>
-    <h2>Welcome, {{ session['username'] }}!</h2>
+    <h2>Welcome, {{ username }}</h2>
     <div id="messages"></div>
-    <input id="message-input" placeholder="Type a message..." />
-    <button id="send-button">Send</button>
+
+    <form id="message-form">
+        <input id="message-input" type="text" placeholder="Type a message" required />
+        <button type="submit">Send</button>
+    </form>
+
     <input type="file" id="file-input" />
-    <button id="upload-button">Upload File</button>
+    <button id="upload-btn">Upload</button>
 
     <script>
-        const socket = io('http://127.0.0.1:5000');  // Change to your server's address if needed
+        const socket = io();
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const messagesDiv = document.getElementById('messages');
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileInput = document.getElementById('file-input');
 
-        // Encrypt message function
-        function encryptMessage(message, secret) {
-            const iv = CryptoJS.lib.WordArray.random(16);
-            const key = CryptoJS.enc.Utf8.parse(secret);
-            const encrypted = CryptoJS.AES.encrypt(message, key, { iv: iv });
-            return JSON.stringify({
-                iv: CryptoJS.enc.Base64.stringify(iv),
-                ciphertext: encrypted.toString()
-            });
-        }
-
-        // Handle incoming messages
-        socket.on('message', function(data) {
-            const messagesDiv = document.getElementById('messages');
+        socket.on('message', (data) => {
             if (data.error) {
-                messagesDiv.innerHTML += `<div style="color:red;">${data.error}</div>`;
+                alert(data.error);
             } else {
-                messagesDiv.innerHTML += `<div>${data.message}</div>`;
+                const msg = document.createElement('div');
+                msg.textContent = data.message;
+                messagesDiv.appendChild(msg);
             }
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the bottom
         });
 
-        // Send a message
-        document.getElementById('send-button').onclick = function() {
-            const messageInput = document.getElementById('message-input');
-            const secretKey = prompt("Enter your secret key:"); // Prompt for a secret key
+        messageForm.onsubmit = (e) => {
+            e.preventDefault();
             const message = messageInput.value;
-
-            if (secretKey && message) {
-                const encryptedMessage = encryptMessage(message, secretKey);
-                socket.emit('message', { message: encryptedMessage });
-                messageInput.value = '';  // Clear input
-            } else {
-                alert('Please enter both the secret key and a message.');
-            }
+            socket.emit('message', { message: encryptMessage(message) });
+            messageInput.value = '';
         };
 
-        // Handle file upload
-        document.getElementById('upload-button').onclick = function() {
-            const fileInput = document.getElementById('file-input');
+        uploadBtn.onclick = () => {
             const file = fileInput.files[0];
             if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
-                
+
                 fetch('/upload', {
                     method: 'POST',
                     body: formData,
